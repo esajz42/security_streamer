@@ -10,10 +10,10 @@ class Camera(object):
     frame = None  # current frame is stored here by background thread
     last_access = 0  # time of last client access to the camera
 
-    def initialize(self):
+    def initialize(self, motion):
         if Camera.thread is None:
             # start background frame thread
-            Camera.thread = threading.Thread(target=self._thread)
+            Camera.thread = threading.Thread(target=self._thread(motion=motion))
             Camera.thread.start()
 
             # wait until frames start to be available
@@ -52,7 +52,7 @@ class Camera(object):
                 if motion:
                     # return camera image with detected motion bounding boxes
                     time.sleep(0.0156)
-                    cls.motion_frame = self.motion(stream.read())
+                    cls.motion_frame = cls.motion(stream.read())
 
                 # reset stream for next frame
                 stream.seek(0)
@@ -64,7 +64,8 @@ class Camera(object):
                     break
         cls.thread = None
 
-    def motion(frame):
+    @classmethod
+    def motion(cls, frame):
         # blur images
         ref_blur = cv2.GaussianBlur(cls.frame, (5, 5), 0)
         new_blur = cv2.GaussianBlut(frame, (5, 5), 0)
