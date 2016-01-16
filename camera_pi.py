@@ -3,6 +3,8 @@ import io
 import threading
 import picamera
 import cv2
+import copy
+import numpy as np
 
 
 class Camera(object):
@@ -48,13 +50,15 @@ class Camera(object):
                 # store frame
                 stream.seek(0)
                 cls.frame = stream.read()
-
                 if motion:
                     # return camera image with detected motion bounding boxes
-                    time.sleep(0.0156)
-                    cls.motion_frame = cls.motion(stream.read())
+                    try:
+                        cls.motion_frame = cls.motion(old_stream)
+                    except NameError:
+                        cls.motion_frame = cls.motion(cls.frame)
+                old_stream = copy.copy(cls.frame)
 
-                # reset stream for next frame
+                # reset streams for next frame
                 stream.seek(0)
                 stream.truncate()
 
@@ -66,10 +70,14 @@ class Camera(object):
 
     @classmethod
     def motion(cls, frame):
+        
+        # make frame steams into image arrays
+        ref = cv2.imdecode(np.fromstring(cls.frame, dtype=np.uint8), 1)
+        new = cv2.imdecode(np.fromstring(frame, dtype=np.uint8), 1)
         # blur images
-        ref_blur = cv2.GaussianBlur(cls.frame, (5, 5), 0)
-        new_blur = cv2.GaussianBlut(frame, (5, 5), 0)
-
+        ref_blur = cv2.GaussianBlur(ref, (5, 5), 0)
+        new_blur = cv2.GaussianBlur(new, (5, 5), 0)
+        import ipdb; ipdb.set_trace()
         # difference images and find change countours
         delta = cv2.absdiff(ref_blur, new_blur)
         thresh = cv2.dilate(cv2.threshold(delta, 25, 255, cv2.THRESH_BINARY)[1], None, iterations=2)
@@ -80,9 +88,12 @@ class Camera(object):
             if cv2.contourArea(c) < 500:
                 continue
             (x, y, w, h) = cv2.boundingRect(c)
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            cv2.rectangle(new, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-            cv2.putText(frame, "occupied", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+            cv2.putText(new, "occupied", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
-            return frame
+            # reencode image to memory buffer
+            new_buff = cv2.imencode(np.tostring(new))
+
+            return new_buff
 
