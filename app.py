@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from flask import Flask, render_template_ Response
+from flask import Flask, render_template, Response
 from camera import Camera
 
 app = Flask(__name__)
