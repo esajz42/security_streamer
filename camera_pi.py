@@ -22,13 +22,13 @@ class Camera(object):
 
     def get_frame(self):
         Camera.last_access = time.time()
-        self.initialize()
+        self.initialize(motion=False)
         return self.frame
 
     def get_motion_frame(self):
         Camera.last_access = time.time()
-        self.initialize()
-        return self.frame_motion
+        self.initialize(motion=True)
+        return self.motion_frame
 
     @classmethod
     def _thread(cls, motion=False):
@@ -47,15 +47,12 @@ class Camera(object):
                                                  use_video_port=True):
                 # store frame
                 stream.seek(0)
+                cls.frame = stream.read()
 
                 if motion:
                     # return camera image with detected motion bounding boxes
-                    if cls.frame is None:
-                        cls.frame = stream.read()
-                    cls.frame = self.motion(stream.read())
-                else:
-                    # return camera image
-                    cls.frame = stream.read()
+                    time.sleep(0.0156)
+                    cls.motion_frame = self.motion(stream.read())
 
                 # reset stream for next frame
                 stream.seek(0)
