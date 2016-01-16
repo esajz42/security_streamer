@@ -2,6 +2,7 @@ import time
 import io
 import threading
 import picamera
+import cv2
 
 
 class Camera(object):
@@ -49,7 +50,7 @@ class Camera(object):
 
                 if motion:
                     # return camera image with detected motion bounding boxes
-                    pass
+                    cls.frame = self.motion(stream.read())
                 else:
                     # return camera image
                     cls.frame = stream.read()
@@ -63,3 +64,25 @@ class Camera(object):
                 if time.time() - cls.last_access > 10:
                     break
         cls.thread = None
+
+    def motion(frame):
+        # blur images
+        ref_blur = cv2.GaussianBlur(cls.frame, (5, 5), 0)
+        new_blur = cv2.GaussianBlut(frame, (5, 5), 0)
+
+        # difference images and find change countours
+        delta = cv2.absdiff(ref_blur, new_blur)
+        thresh = cv2.dilate(cv2.threshold(delta, 25, 255, cv2.THRESH_BINARY)[1], None, iterations=2)
+        (cnts, _) = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        # draw bounding boxes about large contours
+        for c in cnts:
+            if cv2.contourArea(c) < 500:
+                continue
+            (x, y, w, h) = cv2.boundingRect(c)
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+            cv2.putText(frame, "occupied", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+
+            return frame
+
