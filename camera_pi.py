@@ -24,6 +24,11 @@ class Camera(object):
         self.initialize()
         return self.frame
 
+    def get_motion_frame(self):
+        Camera.last_access = time.time()
+        self.initialize_motion()
+        return self.frame_motion
+
     @classmethod
     def _thread(cls):
         with picamera.PiCamera() as camera:
