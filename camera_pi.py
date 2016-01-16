@@ -50,6 +50,8 @@ class Camera(object):
 
                 if motion:
                     # return camera image with detected motion bounding boxes
+                    if cls.frame is None:
+                        cls.frame = stream.read()
                     cls.frame = self.motion(stream.read())
                 else:
                     # return camera image
