@@ -26,11 +26,11 @@ class Camera(object):
 
     def get_motion_frame(self):
         Camera.last_access = time.time()
-        self.initialize_motion()
+        self.initialize()
         return self.frame_motion
 
     @classmethod
-    def _thread(cls):
+    def _thread(cls, motion=False):
         with picamera.PiCamera() as camera:
             # camera setup
             camera.resolution = (320, 240)
@@ -46,7 +46,13 @@ class Camera(object):
                                                  use_video_port=True):
                 # store frame
                 stream.seek(0)
-                cls.frame = stream.read()
+
+                if motion:
+                    # return camera image with detected motion bounding boxes
+                    pass
+                else:
+                    # return camera image
+                    cls.frame = stream.read()
 
                 # reset stream for next frame
                 stream.seek(0)
