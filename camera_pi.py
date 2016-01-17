@@ -25,8 +25,8 @@ class Camera(object):
     def get_frame(self):
         Camera.last_access = time.time()
         self.initialize(motion=False)
-        return self.frame
-        # return self.motion_frame
+        # return self.frame
+        return self.motion_frame
 
     @classmethod
     def _thread(cls):
@@ -46,9 +46,9 @@ class Camera(object):
                 # make frame steams into image arrays
                 ref = cv2.imdecode(np.fromstring(frame, dtype=np.uint8), 1)
                 new = cv2.imdecode(np.fromstring(cls.frame, dtype=np.uint8), 1)
-
-                ref_gray = cv2.cvtColor(ref, cv2.COLOR_BGR2GRAY)
-                new_gray = cv2.cvtColor(new, cv2.COLOR_BGR2GRAY)
+                # import ipdb; ipdb.set_trace()
+                ref_gray = cv2.cvtColor(ref.copy(), cv2.COLOR_BGR2GRAY)
+                new_gray = cv2.cvtColor(new.copy(), cv2.COLOR_BGR2GRAY)
                 
                 # blur images
                 ref_blur = cv2.GaussianBlur(ref_gray, (5, 5), 0)
@@ -57,12 +57,12 @@ class Camera(object):
                # difference images and find change countours
                 delta = cv2.absdiff(ref_blur, new_blur)
                 thresh = cv2.dilate(cv2.threshold(delta, 25, 255, cv2.THRESH_BINARY)[1], None, iterations=2)
-                (cnts, _) = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                (cnts, _) = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
                 # draw bounding boxes about large contours
                 for c in cnts:
                     print "in contours loop"
-                    if cv2.contourArea(c) < 500:
+                    if cv2.contourArea(c) < 50:
                         continue
                     (x, y, w, h) = cv2.boundingRect(c)
                     cv2.rectangle(new, (x, y), (x + w, y + h), (0, 255, 0), 2)
@@ -70,8 +70,7 @@ class Camera(object):
                     cv2.putText(new, "occupied", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
                     # reencode image to memory buffer
-                    # import ipdb; ipdb.set_trace()
-                    new_buff = np.ndarray.tostring(cv2.imencode(".jpg", new)[1])
+                    new_buff = cv2.imencode(".jpeg", new, [int(cv2.IMWRITE_JPEG_QUALITY), 100])[1].tostring()
                 
                 try:
                     print "returning annotated buffer"
@@ -88,6 +87,8 @@ class Camera(object):
                 stream.seek(0)
  
                 cls.frame = stream.read()
+                print "len(cls.frame) = " + str(len(cls.frame))
+                
                 # return camera image with detected motion bounding boxes
                 try:
                     cls.motion_frame = detect_motion(old_stream)
