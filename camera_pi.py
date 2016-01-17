@@ -25,7 +25,8 @@ class Camera(object):
     def get_frame(self):
         Camera.last_access = time.time()
         self.initialize(motion=False)
-        return self.frame
+        # return self.frame
+        return self.motion_frame
 
     @classmethod
     def _thread(cls):
@@ -83,13 +84,12 @@ class Camera(object):
                 stream.seek(0)
  
                 cls.frame = stream.read()
-                #if motion:
-                #    # return camera image with detected motion bounding boxes
-                #    try:
-                #        cls.motion_frame = detect_motion(old_stream)
-                #    except NameError:
-                #        cls.motion_frame = detect_motion(cls.frame)
-                #old_stream = copy.deepcopy(cls.frame)
+                # return camera image with detected motion bounding boxes
+                try:
+                    cls.motion_frame = detect_motion(old_stream)
+                except NameError:
+                    cls.motion_frame = detect_motion(cls.frame)
+                old_stream = copy.deepcopy(cls.frame)
 
                 # reset streams for next frame
                 stream.seek(0)
