@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, request
 from camera_pi import Camera
 
 app = Flask(__name__)
@@ -18,6 +18,11 @@ def gen(camera):
 def video_feed():
     return Response(gen(Camera()),
             mimetype="multipart/x-mixed-replace; boundary=frame")
+
+@app.route("/control", methods=["GET"])
+def control():
+    pass
+
 
 if __name__ == "__main__":
     app.run(host="192.168.0.16", port=8080, threaded=True, debug=True)
