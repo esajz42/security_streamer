@@ -13,7 +13,7 @@ class Camera(object):
     frame = None  # current frame is stored here by background thread
     last_access = 0  # time of last client access to the camera
 
-    def initialize(self, motion):
+    def initialize(self):
         if Camera.thread is None:
             # start background frame thread
             Camera.thread = threading.Thread(target=self._thread)
@@ -25,7 +25,7 @@ class Camera(object):
 
     def get_frame(self):
         Camera.last_access = time.time()
-        self.initialize(motion=False)
+        self.initialize()
         return self.motion_frame
 
     @classmethod
@@ -49,8 +49,8 @@ class Camera(object):
                 new_gray = cv2.cvtColor(new.copy(), cv2.COLOR_BGR2GRAY)
                 
                 # blur images
-                ref_blur = cv2.GaussianBlur(ref_gray, (5, 5), 0)
-                new_blur = cv2.GaussianBlur(new_gray, (5, 5), 0)
+                ref_blur = cv2.GaussianBlur(ref_gray, (7, 7), 0)
+                new_blur = cv2.GaussianBlur(new_gray, (7, 7), 0)
                
                # difference images and find change countours
                 delta = cv2.absdiff(ref_blur, new_blur)
@@ -59,7 +59,7 @@ class Camera(object):
 
                 # draw bounding boxes about large contours
                 for c in cnts:
-                    if cv2.contourArea(c) < 50:
+                    if cv2.contourArea(c) < 500:
                         continue
                     (x, y, w, h) = cv2.boundingRect(c)
                     cv2.rectangle(new, (x, y), (x + w, y + h), (0, 255, 0), 2)
