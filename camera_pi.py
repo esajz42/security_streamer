@@ -26,14 +26,11 @@ class Camera(object):
     def get_frame(self):
         Camera.last_access = time.time()
         self.initialize(motion=False)
-        # return self.frame
-        # import ipdb; ipdb.set_trace()
         return self.motion_frame
 
     @classmethod
     def _thread(cls):
         with picamera.PiCamera() as camera:
-            print "in _thread"
             # camera setup
             camera.resolution = (320, 240)
             camera.hflip = True
@@ -44,11 +41,10 @@ class Camera(object):
             time.sleep(2)
             
             def detect_motion(frame):
-                print "in detect_motion"
                 # make frame steams into image arrays
                 ref = cv2.imdecode(np.fromstring(frame, dtype=np.uint8), 1)
                 new = cv2.imdecode(np.fromstring(cls.frame, dtype=np.uint8), 1)
-                # import ipdb; ipdb.set_trace()
+
                 ref_gray = cv2.cvtColor(ref.copy(), cv2.COLOR_BGR2GRAY)
                 new_gray = cv2.cvtColor(new.copy(), cv2.COLOR_BGR2GRAY)
                 
@@ -63,7 +59,6 @@ class Camera(object):
 
                 # draw bounding boxes about large contours
                 for c in cnts:
-                    print "in contours loop"
                     if cv2.contourArea(c) < 50:
                         continue
                     (x, y, w, h) = cv2.boundingRect(c)
@@ -73,24 +68,19 @@ class Camera(object):
 
                 # reencode image to memory buffer
                 new_buff = cv2.imencode(".jpeg", new, [int(cv2.IMWRITE_JPEG_QUALITY), 100])[1].tostring()
-                # import ipdb; ipdb.set_trace() 
 
                 try:
-                    print "returning annotated buffer"
                     return new_buff
                 except NameError:
-                    print "returning original buffer"
                     return cls.frame      
 
             stream = io.BytesIO()
             for foo in camera.capture_continuous(stream, 'jpeg',
                                                  use_video_port=True):
-                print "in continuous capture loop"
                 # store frame
                 stream.seek(0)
  
                 cls.frame = stream.read()
-                print "len(cls.frame) = " + str(len(cls.frame))
                 
                 # return camera image with detected motion bounding boxes
                 try:
@@ -107,6 +97,5 @@ class Camera(object):
                 # if there hasn't been any clients asking for frames in
                 # the last 10 seconds stop the thread
                 if time.time() - cls.last_access > 10:
-                    print "breaking capture loop, no clients"
                     break
         cls.thread = None
