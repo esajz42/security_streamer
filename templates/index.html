@@ -7,8 +7,9 @@
         <img src="{{ url_for('video_feed') }}">
     </body>
 
-    <form action="/control" method="GET">
+    <form action="/control" method="POST">
         <input type="checkbox" name="motion_cb" value="motion"> 
+        <input type="submit">
     </form>
 
 </html>

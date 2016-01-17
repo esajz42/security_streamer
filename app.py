@@ -19,10 +19,12 @@ def video_feed():
     return Response(gen(Camera()),
             mimetype="multipart/x-mixed-replace; boundary=frame")
 
-@app.route("/control", methods=["GET"])
+@app.route("/control", methods=["GET", "POST"])
 def control():
-    checked = "motion_cb" in request.form
-    print "Checkbox bool: " + str(checked)
+    if request.method == "POST":
+        checked = "motion_cb" in request.form
+        print "Checkbox bool: " + str(checked)
+        return checked
 
 if __name__ == "__main__":
     app.run(host="192.168.0.16", port=8080, threaded=True, debug=True)
