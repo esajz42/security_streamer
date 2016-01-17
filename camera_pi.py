@@ -72,16 +72,17 @@ class Camera(object):
     def motion(cls, frame):
         
         # make frame steams into image arrays
-        ref = cv2.imdecode(np.fromstring(cls.frame, dtype=np.uint8), 1)
-        new = cv2.imdecode(np.fromstring(frame, dtype=np.uint8), 1)
+        ref = cv2.cvtColor(cv2.imdecode(np.fromstring(cls.frame, dtype=np.uint8), 1), cv2.COLOR_BGR2GRAY)
+        new = cv2.cvtColor(cv2.imdecode(np.fromstring(frame, dtype=np.uint8), 1), cv2.COLOR_BGR2GRAY)
+
         # blur images
         ref_blur = cv2.GaussianBlur(ref, (5, 5), 0)
         new_blur = cv2.GaussianBlur(new, (5, 5), 0)
-        import ipdb; ipdb.set_trace()
-        # difference images and find change countours
+       
+       # difference images and find change countours
         delta = cv2.absdiff(ref_blur, new_blur)
         thresh = cv2.dilate(cv2.threshold(delta, 25, 255, cv2.THRESH_BINARY)[1], None, iterations=2)
-        (cnts, _) = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        (cnts, _) = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # draw bounding boxes about large contours
         for c in cnts:
@@ -93,7 +94,9 @@ class Camera(object):
             cv2.putText(new, "occupied", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
             # reencode image to memory buffer
-            new_buff = cv2.imencode(np.tostring(new))
+            new_buff = np.ndarray.tostring(cv2.imencode(".jpg", new))
 
+        try:
             return new_buff
-
+        except NameError:
+            return frame
