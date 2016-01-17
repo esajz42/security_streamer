@@ -10,7 +10,7 @@ def index():
 
 def gen(camera):
     while True:
-        frame = camera.get_motion_frame()
+        frame = camera.get_frame()
         yield (b"--frame\r\n"
                b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n")
 
@@ -20,4 +20,4 @@ def video_feed():
             mimetype="multipart/x-mixed-replace; boundary=frame")
 
 if __name__ == "__main__":
-    app.run(host="192.168.0.16", port=8080, debug=True)
+    app.run(host="192.168.0.16", port=8080, threaded=True, debug=True)

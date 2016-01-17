@@ -15,7 +15,7 @@ class Camera(object):
     def initialize(self, motion):
         if Camera.thread is None:
             # start background frame thread
-            Camera.thread = threading.Thread(target=self._thread(motion=motion))
+            Camera.thread = threading.Thread(target=self._thread)
             Camera.thread.start()
 
             # wait until frames start to be available
@@ -27,14 +27,10 @@ class Camera(object):
         self.initialize(motion=False)
         return self.frame
 
-    def get_motion_frame(self):
-        Camera.last_access = time.time()
-        self.initialize(motion=True)
-        return self.motion_frame
-
     @classmethod
-    def _thread(cls, motion=False):
+    def _thread(cls):
         with picamera.PiCamera() as camera:
+            print "in _thread"
             # camera setup
             camera.resolution = (320, 240)
             camera.hflip = True
@@ -43,20 +39,57 @@ class Camera(object):
             # let camera warm up
             camera.start_preview()
             time.sleep(2)
+            
+            def detect_motion(frame):
+                print "in detect_motion"
+                # make frame steams into image arrays
+                ref = cv2.cvtColor(cv2.imdecode(np.fromstring(cls.frame, dtype=np.uint8), 1), cv2.COLOR_BGR2GRAY)
+                new = cv2.cvtColor(cv2.imdecode(np.fromstring(frame, dtype=np.uint8), 1), cv2.COLOR_BGR2GRAY)
+
+                # blur images
+                ref_blur = cv2.GaussianBlur(ref, (5, 5), 0)
+                new_blur = cv2.GaussianBlur(new, (5, 5), 0)
+               
+               # difference images and find change countours
+                delta = cv2.absdiff(ref_blur, new_blur)
+                thresh = cv2.dilate(cv2.threshold(delta, 25, 255, cv2.THRESH_BINARY)[1], None, iterations=2)
+                (cnts, _) = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+                # draw bounding boxes about large contours
+                for c in cnts:
+                    print "in contours loop"
+                    if cv2.contourArea(c) < 500:
+                        continue
+                    (x, y, w, h) = cv2.boundingRect(c)
+                    cv2.rectangle(new, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+                    cv2.putText(new, "occupied", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+
+                    # reencode image to memory buffer
+                    new_buff = np.ndarray.tostring(cv2.imencode(".jpg", new))
+
+                try:
+                    print "returning annotated buffer"
+                    return new_buff
+                except NameError:
+                    print "returning original buffer"
+                    return frame      
 
             stream = io.BytesIO()
             for foo in camera.capture_continuous(stream, 'jpeg',
                                                  use_video_port=True):
+                print "in continuous capture loop"
                 # store frame
                 stream.seek(0)
+ 
                 cls.frame = stream.read()
-                if motion:
-                    # return camera image with detected motion bounding boxes
-                    try:
-                        cls.motion_frame = cls.motion(old_stream)
-                    except NameError:
-                        cls.motion_frame = cls.motion(cls.frame)
-                old_stream = copy.copy(cls.frame)
+                #if motion:
+                #    # return camera image with detected motion bounding boxes
+                #    try:
+                #        cls.motion_frame = detect_motion(old_stream)
+                #    except NameError:
+                #        cls.motion_frame = detect_motion(cls.frame)
+                #old_stream = copy.deepcopy(cls.frame)
 
                 # reset streams for next frame
                 stream.seek(0)
@@ -65,38 +98,6 @@ class Camera(object):
                 # if there hasn't been any clients asking for frames in
                 # the last 10 seconds stop the thread
                 if time.time() - cls.last_access > 10:
+                    print "breaking capture loop, no clients"
                     break
         cls.thread = None
-
-    @classmethod
-    def motion(cls, frame):
-        
-        # make frame steams into image arrays
-        ref = cv2.cvtColor(cv2.imdecode(np.fromstring(cls.frame, dtype=np.uint8), 1), cv2.COLOR_BGR2GRAY)
-        new = cv2.cvtColor(cv2.imdecode(np.fromstring(frame, dtype=np.uint8), 1), cv2.COLOR_BGR2GRAY)
-
-        # blur images
-        ref_blur = cv2.GaussianBlur(ref, (5, 5), 0)
-        new_blur = cv2.GaussianBlur(new, (5, 5), 0)
-       
-       # difference images and find change countours
-        delta = cv2.absdiff(ref_blur, new_blur)
-        thresh = cv2.dilate(cv2.threshold(delta, 25, 255, cv2.THRESH_BINARY)[1], None, iterations=2)
-        (cnts, _) = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        # draw bounding boxes about large contours
-        for c in cnts:
-            if cv2.contourArea(c) < 500:
-                continue
-            (x, y, w, h) = cv2.boundingRect(c)
-            cv2.rectangle(new, (x, y), (x + w, y + h), (0, 255, 0), 2)
-
-            cv2.putText(new, "occupied", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-
-            # reencode image to memory buffer
-            new_buff = np.ndarray.tostring(cv2.imencode(".jpg", new))
-
-        try:
-            return new_buff
-        except NameError:
-            return frame
