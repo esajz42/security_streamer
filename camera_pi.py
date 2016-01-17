@@ -25,8 +25,8 @@ class Camera(object):
     def get_frame(self):
         Camera.last_access = time.time()
         self.initialize(motion=False)
-        # return self.frame
-        return self.motion_frame
+        return self.frame
+        # return self.motion_frame
 
     @classmethod
     def _thread(cls):
@@ -44,12 +44,15 @@ class Camera(object):
             def detect_motion(frame):
                 print "in detect_motion"
                 # make frame steams into image arrays
-                ref = cv2.cvtColor(cv2.imdecode(np.fromstring(cls.frame, dtype=np.uint8), 1), cv2.COLOR_BGR2GRAY)
-                new = cv2.cvtColor(cv2.imdecode(np.fromstring(frame, dtype=np.uint8), 1), cv2.COLOR_BGR2GRAY)
+                ref = cv2.imdecode(np.fromstring(frame, dtype=np.uint8), 1)
+                new = cv2.imdecode(np.fromstring(cls.frame, dtype=np.uint8), 1)
 
+                ref_gray = cv2.cvtColor(ref, cv2.COLOR_BGR2GRAY)
+                new_gray = cv2.cvtColor(new, cv2.COLOR_BGR2GRAY)
+                
                 # blur images
-                ref_blur = cv2.GaussianBlur(ref, (5, 5), 0)
-                new_blur = cv2.GaussianBlur(new, (5, 5), 0)
+                ref_blur = cv2.GaussianBlur(ref_gray, (5, 5), 0)
+                new_blur = cv2.GaussianBlur(new_gray, (5, 5), 0)
                
                # difference images and find change countours
                 delta = cv2.absdiff(ref_blur, new_blur)
@@ -67,14 +70,15 @@ class Camera(object):
                     cv2.putText(new, "occupied", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
                     # reencode image to memory buffer
-                    new_buff = np.ndarray.tostring(cv2.imencode(".jpg", new))
-
+                    # import ipdb; ipdb.set_trace()
+                    new_buff = np.ndarray.tostring(cv2.imencode(".jpg", new)[1])
+                
                 try:
                     print "returning annotated buffer"
                     return new_buff
                 except NameError:
                     print "returning original buffer"
-                    return frame      
+                    return cls.frame      
 
             stream = io.BytesIO()
             for foo in camera.capture_continuous(stream, 'jpeg',
@@ -89,6 +93,7 @@ class Camera(object):
                     cls.motion_frame = detect_motion(old_stream)
                 except NameError:
                     cls.motion_frame = detect_motion(cls.frame)
+
                 old_stream = copy.deepcopy(cls.frame)
 
                 # reset streams for next frame
