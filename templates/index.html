@@ -6,4 +6,9 @@
         <h1>Security Camera Streaming</title>
         <img src="{{ url_for('video_feed') }}">
     </body>
+
+    <form action="/control" method="GET">
+        <input type="checkbox" id="motion_cb" value="motion"> 
+    </form>
+
 </html>
