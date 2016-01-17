@@ -8,6 +8,7 @@ import numpy as np
 
 
 class Camera(object):
+    motion_frame = None
     thread = None  # background thread that reads frames from camera
     frame = None  # current frame is stored here by background thread
     last_access = 0  # time of last client access to the camera
@@ -26,6 +27,7 @@ class Camera(object):
         Camera.last_access = time.time()
         self.initialize(motion=False)
         # return self.frame
+        # import ipdb; ipdb.set_trace()
         return self.motion_frame
 
     @classmethod
@@ -69,9 +71,10 @@ class Camera(object):
 
                     cv2.putText(new, "occupied", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
-                    # reencode image to memory buffer
-                    new_buff = cv2.imencode(".jpeg", new, [int(cv2.IMWRITE_JPEG_QUALITY), 100])[1].tostring()
-                
+                # reencode image to memory buffer
+                new_buff = cv2.imencode(".jpeg", new, [int(cv2.IMWRITE_JPEG_QUALITY), 100])[1].tostring()
+                # import ipdb; ipdb.set_trace() 
+
                 try:
                     print "returning annotated buffer"
                     return new_buff
