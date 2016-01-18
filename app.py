@@ -22,9 +22,8 @@ def video_feed():
 @app.route("/control", methods=["GET", "POST"])
 def control():
     if request.method == "POST":
-        checked = "motion_cb" in request.form
-        print "Checkbox bool: " + str(checked)
-        return checked
+        button = request.form["alerts"]
+        return button
 
 if __name__ == "__main__":
     app.run(host="192.168.0.16", port=8080, threaded=True, debug=True)
