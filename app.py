@@ -28,7 +28,6 @@ def video_feed():
 @requires_auth
 def control():
     global alerts
-    # if request.method == "POST":
     alerts = request.form["alerts"] == "Alerts"
     return str(alerts)
 
