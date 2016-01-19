@@ -6,7 +6,6 @@ import cv2
 import copy
 import numpy as np
 
-
 class Camera(object):
     has_motion = False
     motion_frame = None
@@ -29,6 +28,8 @@ class Camera(object):
         self.initialize()
         if alerts and self.has_motion:
             print "THIS IS WHERE I SEND AN EMAIL!!!"
+            for messager in messagers:
+                messager.send(self.motion_frame)
         return self.motion_frame
 
     @classmethod
