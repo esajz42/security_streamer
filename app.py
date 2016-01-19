@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from flask import Flask, render_template, Response, request
+from flask_auth import requires_auth
 from camera_pi import Camera
 
 alerts = False
@@ -7,6 +8,7 @@ alerts = False
 app = Flask(__name__)
 
 @app.route("/")
+@requires_auth
 def index():
     return render_template("index.html")
 
@@ -23,6 +25,7 @@ def video_feed():
             mimetype="multipart/x-mixed-replace; boundary=frame")
 
 @app.route("/control", methods=["POST"])
+@requires_auth
 def control():
     global alerts
     # if request.method == "POST":
