@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
+import subprocess
 import smtplib
+import numpy as np
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
 from time import sleep
-import subprocess
+
 
 """Email.py
 
@@ -36,7 +38,6 @@ class Email(object):
         self.password = password
         self.email_address = email_address
         self.message = message
-        # self.server = self.login()
 
     def login(self):
         """Logs into gmail account and returns an instance of an SMTP server
@@ -82,11 +83,8 @@ class Email(object):
             msgText = MIMEText(self.message)
             msgText.set_charset("ISO-8859")
             msg.attach(msgText)
-
-            with open(args[0], 'rb') as file_as_string:
-                attachment = MIMEImage(file_as_string.read())
-
-            attachment.add_header('Content-Disposition', 'attachment', filename=args[0])
+            attachment = MIMEImage(args[0], "jpeg")
+            attachment.add_header('Content-Disposition', 'attachment', filename="image.jpeg")
             msg.attach(attachment)
 
             print "Sending mail from " + self.username + " to " + self.email_address + "..."
