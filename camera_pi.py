@@ -8,6 +8,7 @@ import numpy as np
 
 
 class Camera(object):
+    has_motion = False
     motion_frame = None
     thread = None  # background thread that reads frames from camera
     frame = None  # current frame is stored here by background thread
@@ -23,9 +24,11 @@ class Camera(object):
             while self.frame is None:
                 time.sleep(0)
 
-    def get_frame(self):
+    def get_frame(self, alerts):
         Camera.last_access = time.time()
         self.initialize()
+        if alerts and self.has_motion:
+            print "THIS IS WHERE I SEND AN EMAIL!!!"
         return self.motion_frame
 
     @classmethod
@@ -58,9 +61,11 @@ class Camera(object):
                 (cnts, _) = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
                 # draw bounding boxes about large contours
+                cls.has_motion = False
                 for c in cnts:
                     if cv2.contourArea(c) < 500:
                         continue
+                    cls.has_motion = True
                     (x, y, w, h) = cv2.boundingRect(c)
                     cv2.rectangle(new, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
