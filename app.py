@@ -12,7 +12,6 @@ def index():
 
 def gen(camera):
     global alerts
-    print "gen: " + str(alerts)
     while True:
         frame = camera.get_frame(alerts)
         yield (b"--frame\r\n"
