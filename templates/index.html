@@ -7,9 +7,10 @@
         <h1>Security Camera Streaming</title>
         <img src="{{ url_for('video_feed') }}">
 
+    <form action="/control" method="POST">
         <input type="radio" name="alerts" value="Alerts"> Alerts<br> 
         <input type="radio" name="alerts" value="No Alerts" checked> No Alerts<br> 
         <input type="submit">
-
+    </form>
     </body>
 </html>
