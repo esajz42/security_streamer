@@ -13,6 +13,9 @@ class Camera(object):
     frame = None  # current frame is stored here by background thread
     last_access = 0  # time of last client access to the camera
 
+    def __init__(self, messagers=[]):
+        self.messagers = messagers
+
     def initialize(self):
         if Camera.thread is None:
             # start background frame thread
@@ -28,7 +31,7 @@ class Camera(object):
         self.initialize()
         if alerts and self.has_motion:
             print "THIS IS WHERE I SEND AN EMAIL!!!"
-            for messager in messagers:
+            for messager in self.messagers:
                 messager.send(self.motion_frame)
         return self.motion_frame
 
