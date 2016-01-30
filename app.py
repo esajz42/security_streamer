@@ -7,7 +7,7 @@ from emailer import Email
 
 alerts = False
 
-messager_info = pickle.load(open("../rpi_security_tests/messager_info.pickle", "rb"))
+messager_info = pickle.load(open("/home/pi/Documents/rpi_security_tests/messager_info.pickle", "rb"))
 messagers = [Email(messager_info[0], messager_info[1], messager_info[2][0], messager_info[3]),
         Email(messager_info[0], messager_info[1], messager_info[2][1], messager_info[3])]
 
