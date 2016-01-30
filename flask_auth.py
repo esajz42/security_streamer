@@ -8,8 +8,8 @@ def check_auth(username, password):
     """This function is called to check if a username /
     password combination is valid.
     """
-    username_key = pickle.load(open('../rpi_security_tests/username_key.pickle', 'rb')) 
-    password_key = pickle.load(open('../rpi_security_tests/password_key.pickle', 'rb'))
+    username_key = pickle.load(open('/home/pi/Documents/rpi_security_tests/username_key.pickle', 'rb')) 
+    password_key = pickle.load(open('/home/pi/Documents/rpi_security_tests/password_key.pickle', 'rb'))
 
     return username == username_key and password == password_key
 

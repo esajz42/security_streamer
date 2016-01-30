@@ -4,4 +4,4 @@
 sudo pkill apache
 
 # Start security cam streaming server
-python app.py
+python /home/pi/Documents/security_streamer/app.py
