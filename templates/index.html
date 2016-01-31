@@ -1,10 +1,16 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
     <head>
+        <meta charset="utf-8">
         <title>Security Camera Streaming</title>
+        <link href="css/bootstrap.min.css" rel="stylesheet">
     </head>
 
     <body>
         <h1>Security Camera Streaming</title><br>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <script src="js/bootstrap.min.js"></script>
+            
         <img src="{{ url_for('video_feed') }}">
     <form action="/control" method="POST">
         <input type="radio" name="alerts" value="Alerts"> Alerts<br> 
